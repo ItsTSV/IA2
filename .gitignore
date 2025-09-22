@@ -1,0 +1,5 @@
+# Usual python stuff
+.venv
+.idea
+test_images
+train_images
