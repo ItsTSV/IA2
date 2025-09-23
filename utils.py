@@ -21,10 +21,12 @@ def four_point_transform(image, one_c):
         x,y bottom left
         x,y bottom right
     """
-    pts = [((float(one_c[0])), float(one_c[1])),
-           ((float(one_c[2])), float(one_c[3])),
-           ((float(one_c[4])), float(one_c[5])),
-           ((float(one_c[6])), float(one_c[7]))]
+    pts = [
+        ((float(one_c[0])), float(one_c[1])),
+        ((float(one_c[2])), float(one_c[3])),
+        ((float(one_c[4])), float(one_c[5])),
+        ((float(one_c[6])), float(one_c[7])),
+    ]
 
     rect = order_points(np.array(pts))
     (tl, tr, br, bl) = rect
@@ -34,11 +36,15 @@ def four_point_transform(image, one_c):
     height_a = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
     height_b = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
     max_height = max(int(height_a), int(height_b))
-    dst = np.array([
-        [0, 0],
-        [max_width - 1, 0],
-        [max_width - 1, max_height - 1],
-        [0, max_height - 1]], dtype="float32")
+    dst = np.array(
+        [
+            [0, 0],
+            [max_width - 1, 0],
+            [max_width - 1, max_height - 1],
+            [0, max_height - 1],
+        ],
+        dtype="float32",
+    )
     M = cv2.getPerspectiveTransform(rect, dst)
     warped = cv2.warpPerspective(image, M, (max_width, max_height))
     return warped
@@ -67,7 +73,20 @@ def compute_scores(predicted: list, real_path: str) -> tuple:
         elif real == 1 and pred == 0:
             fn += 1
 
-    accuracy = (tp + fp) / (tp + fp + tn + fn)
-    f1 = 2 * tp / (2 * tp + fp + fn)
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+    f1 = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 1.0
 
     return accuracy, f1
+
+
+def draw_bounds(image, coord, color):
+    point1 = (int(coord[0]), int(coord[1]))
+    point2 = (int(coord[2]), int(coord[3]))
+    point3 = (int(coord[4]), int(coord[5]))
+    point4 = (int(coord[6]), int(coord[7]))
+
+    image = cv2.line(image, point1, point2, color, 1, cv2.LINE_AA)
+    image = cv2.line(image, point2, point3, color, 1, cv2.LINE_AA)
+    image = cv2.line(image, point3, point4, color, 1, cv2.LINE_AA)
+    image = cv2.line(image, point4, point1, color, 1, cv2.LINE_AA)
+    return image
