@@ -27,6 +27,10 @@ if __name__ == "__main__":
     lbp_detector = LBPDetector()
     hog_detector = HOGDetector()
     haar_detector = HaarDetector()
+    basic_neural_detector = BasicNeuralDetector()
+
+    # Visualize most important Haar features
+    haar_features = haar_detector.plot_best_features()
 
     # Loop through parking lot images
     test_images = [img for img in glob.glob("test_images/*.jpg")]
@@ -50,6 +54,7 @@ if __name__ == "__main__":
             warped = cv2.resize(warped, (100, 150))
 
             # Get predictions
+            '''
             edge_prediction, edges = edge_detector.predict(warped)
             lbp_prediction, histogram = lbp_detector.predict(warped)
             hog_prediction, hog_img = hog_detector.predict(warped)
@@ -67,6 +72,10 @@ if __name__ == "__main__":
             predictions_lbp.append(lbp_prediction)
             predictions_hog.append(hog_prediction)
             predictions_haar.append(haar_prediction)
+            '''
+
+            prediction = basic_neural_detector.predict(warped)
+            predictions.append(prediction)
 
             # Draw circle
             if prediction:
@@ -75,33 +84,42 @@ if __name__ == "__main__":
                 draw_bounds(copy, coords, (0, 0, 255))
 
             # Display features
+            '''
             cv2.imshow("Edges", edges)
             cv2.imshow("LBP", histogram)
             cv2.imshow("HOG", hog_img)
             cv2.imshow("HAAR", haar_img)
+            '''
             cv2.imshow("Fajne parkoviste", copy)
             cv2.waitKey(10)
 
         # Compute scores from all methods
         accuracy, f1 = compute_scores(predictions, address.replace(".jpg", ".txt"))
+        '''
         accuracy_edge, f1_edge = compute_scores(predictions_edge, address.replace(".jpg", ".txt"))
         accuracy_lbp, f1_lbp = compute_scores(predictions_lbp, address.replace(".jpg", ".txt"))
         accuracy_hog, f1_hog = compute_scores(predictions_hog, address.replace(".jpg", ".txt"))
         accuracy_haar, f1_haar = compute_scores(predictions_haar, address.replace(".jpg", ".txt"))
+        '''
         print("---------------------------------")
+        print(f"{address}")
         print(f"Accuracy: {accuracy}, F1: {f1}")
+        '''
         print(f"Edge Accuracy: {accuracy_edge}, F1: {f1_edge}")
         print(f"LBP Accuracy: {accuracy_lbp}, F1: {f1_lbp}")
         print(f"HOG Accuracy: {accuracy_hog}, F1: {f1_hog}")
         print(f"HAAR Accuracy: {accuracy_haar}, F1: {f1_haar}")
+        '''
         print("---------------------------------")
 
         # Charts
+        '''
         sns.barplot(
             x=["Edge", "LBP", "HOG", "HAAR", "Final"],
             y=[accuracy_edge, accuracy_lbp, accuracy_hog, accuracy_haar, accuracy],
         )
         plt.show()
+        '''
 
         # Display it
         cv2.imshow("Fajne parkoviste", copy)
