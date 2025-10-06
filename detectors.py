@@ -6,8 +6,9 @@ from skimage.transform import integral_image
 import skimage as ski
 import matplotlib.pyplot as plt
 import glob
-from models import BasicParkingNet
+from models import BasicParkingNet, CnnParkingNet
 import torch
+
 
 class EdgeDetector:
     def __init__(self, threshold1=100, threshold2=200, edge_sum_threshold=1000):
@@ -57,18 +58,21 @@ class HaarDetector:
         img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (30, 45))
         ii = integral_image(img)
-        features = haar_like_feature(ii, 0, 0, ii.shape[0], ii.shape[1],
-                                     feature_type=['type-2-x', 'type-2-y'])
+        features = haar_like_feature(
+            ii, 0, 0, ii.shape[0], ii.shape[1], feature_type=["type-2-x", "type-2-y"]
+        )
         return self.model.predict(features.reshape(1, -1))[0], img
 
     def plot_best_features(self, images_path="train_images/full/*.png"):
         """Plots best features used by the Haar classifier."""
-        images = [cv2.imread(img, cv2.IMREAD_GRAYSCALE) for img in glob.glob(images_path)]
+        images = [
+            cv2.imread(img, cv2.IMREAD_GRAYSCALE) for img in glob.glob(images_path)
+        ]
         images = [cv2.resize(img, (30, 45)) for img in images]
         images = np.array(images)
 
         feature_coord, feature_type = ski.feature.haar_like_feature_coord(
-            width=30, height=45, feature_type=['type-2-x', 'type-2-y']
+            width=30, height=45, feature_type=["type-2-x", "type-2-y"]
         )
 
         best_features = np.argsort(self.model.feature_importances_)[::-1]
@@ -76,26 +80,49 @@ class HaarDetector:
         for idx, ax in enumerate(axes.ravel()):
             image = images[0]
             image = ski.feature.draw_haar_like_feature(
-                image, 0, 0, images.shape[2], images.shape[1], [feature_coord[best_features[idx]]]
+                image,
+                0,
+                0,
+                images.shape[2],
+                images.shape[1],
+                [feature_coord[best_features[idx]]],
             )
             ax.imshow(image)
             ax.set_xticks([])
             ax.set_yticks([])
-            ax.set_title(f"Feature importance: {self.model.feature_importances_[best_features[idx]]:.4f}")
+            ax.set_title(
+                f"Feature importance: {self.model.feature_importances_[best_features[idx]]:.4f}"
+            )
 
         plt.tight_layout()
         plt.show()
 
+
 class BasicNeuralDetector:
     def __init__(self, model_path="models/basic_parking_net.pth"):
-        self.model = BasicParkingNet()
-        self.model.load(model_path)
+        self.network = BasicParkingNet()
+        self.network.load(model_path)
 
     def predict(self, image):
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (40, 60))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         with torch.no_grad():
-            output = self.model(img_tensor)
+            output = self.network(img_tensor)
+        prediction = 1 if output.item() > 0.5 else 0
+        return prediction
+
+
+class CnnDetector:
+    def __init__(self, model_path="models/cnn_parking_net.pth"):
+        self.network = CnnParkingNet()
+        self.network.load(model_path)
+
+    def predict(self, image):
+        img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+        img = cv2.resize(img, (40, 60))
+        img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        with torch.no_grad():
+            output = self.network(img_tensor)
         prediction = 1 if output.item() > 0.5 else 0
         return prediction
