@@ -77,8 +77,8 @@ if __name__ == "__main__":
             """
 
             #prediction = basic_neural_detector.predict(warped)
-            #prediction = cnn_neural_detector.predict(warped)
-            prediction = mobilenet_neural_detector.predict(warped)
+            prediction = cnn_neural_detector.predict(warped)
+            #prediction = mobilenet_neural_detector.predict(warped)
             predictions.append(prediction)
 
             # Draw circle

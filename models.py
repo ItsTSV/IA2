@@ -11,14 +11,16 @@ class BasicParkingNet(nn.Module):
         # Basic fc network
         self.model = nn.Sequential(
             nn.Linear(img_width * img_height, 128),
+            nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Linear(64, 1),
         )
 
         # Optimizer
-        self.optimizer = optim.SGD(self.parameters(), lr=0.01, momentum=0.9)
+        self.optimizer = optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
 
     def forward(self, x):
         x = x.view(x.size(0), -1)
@@ -53,11 +55,11 @@ class CnnParkingNet(nn.Module):
         self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Linear(n_flatten, 256),
-            nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(256, 64),
             nn.ReLU(),
+            nn.Linear(256, 64),
             nn.Dropout(0.2),
+            nn.ReLU(),
             nn.Linear(64, 1),
         )
 
