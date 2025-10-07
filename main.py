@@ -1,8 +1,5 @@
-import glob
 from utils import *
 from detectors import *
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
@@ -29,6 +26,7 @@ if __name__ == "__main__":
     haar_detector = HaarDetector()
     basic_neural_detector = BasicNeuralDetector()
     cnn_neural_detector = CnnDetector()
+    mobilenet_neural_detector = MobileNetDetector()
 
     # Visualize most important Haar features
     haar_features = haar_detector.plot_best_features()
@@ -79,7 +77,8 @@ if __name__ == "__main__":
             """
 
             #prediction = basic_neural_detector.predict(warped)
-            prediction = cnn_neural_detector.predict(warped)
+            #prediction = cnn_neural_detector.predict(warped)
+            prediction = mobilenet_neural_detector.predict(warped)
             predictions.append(prediction)
 
             # Draw circle

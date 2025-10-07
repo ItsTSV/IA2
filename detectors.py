@@ -6,7 +6,7 @@ from skimage.transform import integral_image
 import skimage as ski
 import matplotlib.pyplot as plt
 import glob
-from models import BasicParkingNet, CnnParkingNet
+from models import BasicParkingNet, CnnParkingNet, ParkingMobileNetV3
 import torch
 
 
@@ -120,7 +120,24 @@ class CnnDetector:
 
     def predict(self, image):
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
-        img = cv2.resize(img, (40, 60))
+        img = cv2.resize(img, (32, 64))
+        img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        img_tensor /= 255.0
+        with torch.no_grad():
+            output = self.network(img_tensor)
+        prediction = 1 if output.item() > 0.5 else 0
+        return prediction
+
+
+class MobileNetDetector:
+    def __init__(self, model_path="models/parking_mobilenet.pth"):
+        self.network = ParkingMobileNetV3()
+        self.network.load(model_path)
+        self.network.eval()
+
+    def predict(self, image):
+        img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+        img = cv2.resize(img, (224, 224))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         with torch.no_grad():
             output = self.network(img_tensor)
