@@ -139,6 +139,7 @@ class MobileNetDetector:
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (224, 224))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
         prediction = 1 if output.item() > 0.5 else 0

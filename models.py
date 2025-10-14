@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
 from torchvision.models.mobilenetv3 import *
+from torchvision.models.efficientnet import *
 
 class BasicParkingNet(nn.Module):
     def __init__(self, img_width=40, img_height=60):
@@ -78,8 +79,8 @@ class CnnParkingNet(nn.Module):
 class ParkingMobileNetV3(nn.Module):
     def __init__(self):
         super(ParkingMobileNetV3, self).__init__()
-        weights = MobileNet_V3_Large_Weights.DEFAULT
-        self.base = mobilenet_v3_large(weights=weights)
+        weights = MobileNet_V3_Small_Weights.DEFAULT
+        self.base = mobilenet_v3_small(weights=weights)
 
         # Turn off gradients
         for param in self.base.features.parameters():
@@ -105,7 +106,47 @@ class ParkingMobileNetV3(nn.Module):
         )
 
         # Optimizer
-        self.optimizer = optim.AdamW(self.parameters(), lr=1e-4)
+        self.optimizer = optim.AdamW(self.parameters(), lr=0.00005)
+
+    def forward(self, x):
+        return self.base(x)
+
+    def load(self, path):
+        self.load_state_dict(torch.load(path, weights_only=True))
+        self.eval()
+
+
+class ParkingEfficientNet(nn.Module):
+    def __init__(self):
+        super(ParkingEfficientNet, self).__init__()
+        weights = EfficientNet_V2_L_Weights
+        self.base = efficientnet_v2_l(weights=weights)
+
+        # Turn off gradients
+        for param in self.base.features.parameters():
+            param.requires_grad = False
+
+        # Turn on gradients for last conv blocks and fc layers
+        for name, module in list(self.base.features.named_children())[-4:]:
+            for param in module.parameters():
+                param.requires_grad = True
+
+        # Replace first conv layer to accept 1 channel input
+        first_conv = self.base.features[0][0]
+        self.base.features[0][0] = nn.Conv2d(1, first_conv.out_channels, kernel_size=first_conv.kernel_size,
+                                             stride=first_conv.stride, padding=first_conv.padding, bias=first_conv.bias)
+
+        # Replace EfficientNet head with head for my classification
+        in_features = self.base.classifier[1].in_features
+        self.base.classifier = nn.Sequential(
+            nn.Linear(in_features, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, 1)
+        )
+
+        # Optimizer
+        self.optimizer = optim.AdamW(self.parameters(), lr=0.0001)
 
     def forward(self, x):
         return self.base(x)

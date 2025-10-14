@@ -31,5 +31,18 @@ The only thing that changes is kernel sizes, strides, dropouts and learning rate
 
 **Accuracy: 0.922**
 
-# Transfer Learning: MobileNetV3 Large
+# Transfer Learning: MobileNetV3 Small
+I picked small MobileNetV3 because it was by far the fastest model to train. The 
+parameters : accuracy ratio is very good (it only has 2.5M params, approximately 9.8MB). 
+
+I performed few changes to the architecture:
+- One channel input (instead of three)
+- Changed classifier to my own (two linear layers, dropout, one neuron output)
+- Froze the whole model except the classifier
+
+For training, I used AdamW with lr 0.0001. The number of epochs was 10, because
+the model is already pretrained (and also pretty big for training on CPU). After that, I fined tuned it again, with lr 0.00005 for 5 epochs.
+And it just worked.
+
+**Accuracy: 0.975**
 
