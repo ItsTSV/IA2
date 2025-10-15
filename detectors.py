@@ -6,7 +6,7 @@ from skimage.transform import integral_image
 import skimage as ski
 import matplotlib.pyplot as plt
 import glob
-from models import BasicParkingNet, CnnParkingNet, ParkingMobileNetV3
+from models import BasicParkingNet, CnnParkingNet, ParkingMobileNetV3, ParkingEfficientNet
 import torch
 
 
@@ -104,43 +104,45 @@ class BasicNeuralDetector:
         self.network.load(model_path)
 
     def predict(self, image):
+        # Transform the image -- no normalization here
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (40, 60))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+
+        # Send it to the model
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
-        return prediction
+
+        # Take a guess ;)
+        return 1 if output.item() > 0.5 else 0
 
 
-class CnnDetector:
-    def __init__(self, model_path="models/cnn_parking_net.pth"):
-        self.network = CnnParkingNet()
-        self.network.load(model_path)
+class NeuralDetector:
+    def __init__(self, model="CNN"):
+        self.used_model = model
 
-    def predict(self, image):
-        img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+        if model == "CNN":
+            self.network = CnnParkingNet()
+            self.network.load("models/cnn_parking_net.pth")
+        elif model == "MobileNet":
+            self.network = ParkingMobileNetV3()
+            self.network.load("models/parking_mobilenet.pth")
+        elif model == "EfficientNet":
+            self.network = ParkingEfficientNet()
+            self.network.load("models/parking_efficientnet.pth")
+        else:
+            raise ValueError("Model must be 'CNN', 'MobileNet' or 'EfficientNet'")
+
+    def predict(self, img):
+        # Transform the image
+        img = cv2.cvtColor(img.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (32, 64))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         img_tensor /= 255.0
+
+        # Send it to neural network
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
-        return prediction
 
-
-class MobileNetDetector:
-    def __init__(self, model_path="models/parking_mobilenet.pth"):
-        self.network = ParkingMobileNetV3()
-        self.network.load(model_path)
-        self.network.eval()
-
-    def predict(self, image):
-        img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
-        img = cv2.resize(img, (224, 224))
-        img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-        img_tensor /= 255.0
-        with torch.no_grad():
-            output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
-        return prediction
+        # Take a guess ;)
+        return 1 if output.item() > 0.5 else 0

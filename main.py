@@ -25,8 +25,9 @@ if __name__ == "__main__":
     hog_detector = HOGDetector()
     haar_detector = HaarDetector()
     basic_neural_detector = BasicNeuralDetector()
-    cnn_neural_detector = CnnDetector()
-    mobilenet_neural_detector = MobileNetDetector()
+    cnn_neural_detector = NeuralDetector("CNN")
+    mobilenet_neural_detector = NeuralDetector("MobileNet")
+    efficientnet_neural_detector = NeuralDetector("EfficientNet")
 
     # Visualize most important Haar features
     haar_features = haar_detector.plot_best_features()
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     # Prepare all predictions
     all_predictions = []
 
-    # Loop through parking lot images
+    # Loop through car park images (thanks for fixing my British English, PyCharm)
     test_images = [img for img in glob.glob("test_images/*.jpg")]
     test_images.sort()
     for address in test_images:
@@ -78,7 +79,8 @@ if __name__ == "__main__":
 
             #prediction = basic_neural_detector.predict(warped)
             #prediction = cnn_neural_detector.predict(warped)
-            prediction = mobilenet_neural_detector.predict(warped)
+            #prediction = mobilenet_neural_detector.predict(warped)
+            prediction = efficientnet_neural_detector.predict(warped)
             predictions.append(prediction)
 
             # Draw circle
