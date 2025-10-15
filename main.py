@@ -25,9 +25,9 @@ if __name__ == "__main__":
     hog_detector = HOGDetector()
     haar_detector = HaarDetector()
     basic_neural_detector = BasicNeuralDetector()
-    cnn_neural_detector = NeuralDetector("CNN")
-    mobilenet_neural_detector = NeuralDetector("MobileNet")
-    efficientnet_neural_detector = NeuralDetector("EfficientNet")
+    cnn_neural_detector = CnnDetector()
+    mobilenet_neural_detector = MobileNetDetector()
+    efficientnet_neural_detector = EfficientNetDetector()
 
     # Visualize most important Haar features
     haar_features = haar_detector.plot_best_features()
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # Prepare all predictions
     all_predictions = []
 
-    # Loop through car park images (thanks for fixing my British English, PyCharm)
+    # Loop through parking lot images
     test_images = [img for img in glob.glob("test_images/*.jpg")]
     test_images.sort()
     for address in test_images:
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             cv2.imshow("HAAR", haar_img)
             """
             cv2.imshow("Fajne parkoviste", copy)
-            cv2.waitKey(10)
+            cv2.waitKey(1)
 
         # Compute scores from all methods
         accuracy, f1 = compute_scores(predictions, address.replace(".jpg", ".txt"))
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
         # Display it
         cv2.imshow("Fajne parkoviste", copy)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
 
     # Compute all scores
     accuracy_all = sum(all_predictions) / len(all_predictions)

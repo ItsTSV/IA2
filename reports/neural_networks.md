@@ -46,3 +46,15 @@ And it just worked.
 
 **Accuracy: 0.975**
 
+# Transfer Learning: EfficientNetB0
+In order to protect nature and our household's electricity bills, I picked another very lite model: EfficientNetB0.
+It has 5.3M params (approximately 33MB), which is still pretty okay. The changes to the architecture were the same
+as for the MobileNetV3. The training was also the same -- first 10 epochs with lr 0.0001, then some more epochs with lower
+learning rate to catch some weird edge cases (nighttime + parking spot under the lamp, sunny + parking spot in the shadow of a tree, etc...)
+And again, it just worked -- as well as MobileNetV3 ;)
+
+**Accuracy: 0.976**
+
+# Fancy chart to sum it up
+![Model Comparison](model_comparison.png)
+
