@@ -1,5 +1,4 @@
 # Augmentations
-- Grayscale
 - Jitter (brightness, contrast, saturation = 0.4; hue = 0.2)
 - Resize (40, 60) for my models; (244, 244) for transfer learning
 - Tensor
@@ -36,7 +35,6 @@ I picked small MobileNetV3 because it was by far the fastest model to train. The
 parameters : accuracy ratio is very good (it only has 2.5M params, approximately 9.8MB). 
 
 I performed few changes to the architecture:
-- One channel input (instead of three)
 - Changed classifier to my own (two linear layers, dropout, one neuron output)
 - Froze the whole model except the classifier
 
@@ -53,7 +51,7 @@ as for the MobileNetV3. The training was also the same -- first 10 epochs with l
 learning rate to catch some weird edge cases (nighttime + parking spot under the lamp, sunny + parking spot in the shadow of a tree, etc...)
 And again, it just worked -- as well as MobileNetV3 ;)
 
-**Accuracy: 0.976**
+**Accuracy: 0.981**
 
 # Fancy chart to sum it up
 ![Model Comparison](model_comparison.png)

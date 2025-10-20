@@ -92,22 +92,14 @@ class ParkingMobileNetV3(nn.Module):
             for param in module.parameters():
                 param.requires_grad = True
 
-        # Replace first conv layer to accept 1 channel input
-        first_conv = self.base.features[0][0]
-        self.base.features[0][0] = nn.Conv2d(1, first_conv.out_channels, kernel_size=first_conv.kernel_size,
-                                             stride=first_conv.stride, padding=first_conv.padding, bias=first_conv.bias)
-
         # Replace MobileNet head with head for my classification
         in_features = self.base.classifier[0].in_features
         self.base.classifier = nn.Sequential(
             nn.Linear(in_features, 256),
             nn.Hardswish(),
-            nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.Linear(256, 1)
         )
-
-        # Optimizer
-        self.optimizer = optim.AdamW(self.parameters(), lr=0.00005)
 
     def forward(self, x):
         return self.base(x)
@@ -132,22 +124,14 @@ class ParkingEfficientNet(nn.Module):
             for param in module.parameters():
                 param.requires_grad = True
 
-        # Replace first conv layer to accept 1 channel input
-        first_conv = self.base.features[0][0]
-        self.base.features[0][0] = nn.Conv2d(1, first_conv.out_channels, kernel_size=first_conv.kernel_size,
-                                             stride=first_conv.stride, padding=first_conv.padding, bias=first_conv.bias)
-
         # Replace EfficientNet head with head for my classification
         in_features = self.base.classifier[1].in_features
         self.base.classifier = nn.Sequential(
             nn.Linear(in_features, 256),
             nn.ReLU(),
-            nn.Dropout(0.3),
+            nn.Dropout(0.5),
             nn.Linear(256, 1)
         )
-
-        # Optimizer
-        self.optimizer = optim.AdamW(self.parameters(), lr=0.000075)
 
     def forward(self, x):
         return self.base(x)
