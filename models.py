@@ -105,7 +105,7 @@ class ParkingMobileNetV3(nn.Module):
         return self.base(x)
 
     def load(self, path):
-        self.load_state_dict(torch.load(path, weights_only=True))
+        self.load_state_dict(torch.load(path, weights_only=True, map_location="gpu" if torch.cuda.is_available() else "cpu"))
         self.eval()
 
 
@@ -137,5 +137,5 @@ class ParkingEfficientNet(nn.Module):
         return self.base(x)
 
     def load(self, path):
-        self.load_state_dict(torch.load(path, weights_only=True))
+        self.load_state_dict(torch.load(path, weights_only=True, map_location="gpu" if torch.cuda.is_available() else "cpu"))
         self.eval()
