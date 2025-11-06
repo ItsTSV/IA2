@@ -5,3 +5,5 @@ test_images
 train_images
 train_gan
 train_generated_imgs
+training_gan
+train-parking-for-yolo

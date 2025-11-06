@@ -1,5 +1,6 @@
 from utils import *
 from detectors import *
+import cv2
 
 
 if __name__ == "__main__":
@@ -28,6 +29,7 @@ if __name__ == "__main__":
     cnn_neural_detector = CnnDetector()
     mobilenet_neural_detector = MobileNetDetector()
     efficientnet_neural_detector = EfficientNetDetector()
+    faster_detector = FasterRCNNDetector()
 
     # Visualize most important Haar features
     haar_features = haar_detector.plot_best_features()
@@ -49,6 +51,13 @@ if __name__ == "__main__":
         # Open parking img, create copy
         img = cv2.imread(address)
         copy = img.copy()
+
+        detected = faster_detector.detect_all_full(img)
+        for box, index, score in detected:
+            print(f"Index {index} with score {score}")
+            copy = cv2.rectangle(img, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 5)
+            cv2.imshow("Fajne parkoviste", copy)
+            cv2.waitKey()
 
         # Get individual parking spaces
         for coords in pkm_coordinates:

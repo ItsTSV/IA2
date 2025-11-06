@@ -1,12 +1,24 @@
 import cv2
 import numpy as np
 import joblib
+import torchvision.models.detection
 from skimage.feature import local_binary_pattern, hog, haar_like_feature
 from skimage.transform import integral_image
 import skimage as ski
 import matplotlib.pyplot as plt
 import glob
-from models import BasicParkingNet, CnnParkingNet, ParkingMobileNetV3, ParkingEfficientNet
+
+from torchvision.models.detection import (
+    fasterrcnn_mobilenet_v3_large_fpn,
+    FasterRCNN_MobileNet_V3_Large_FPN_Weights,
+)
+
+from models import (
+    BasicParkingNet,
+    CnnParkingNet,
+    ParkingMobileNetV3,
+    ParkingEfficientNet,
+)
 import torch
 
 
@@ -137,7 +149,9 @@ class MobileNetDetector:
 
     def predict(self, image):
         img = cv2.resize(image, (224, 224))
-        img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        img_tensor = (
+            torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        )
         img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
@@ -153,9 +167,42 @@ class EfficientNetDetector:
 
     def predict(self, image):
         img = cv2.resize(image, (224, 224))
-        img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        img_tensor = (
+            torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        )
         img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
         prediction = 1 if output.item() > 0.5 else 0
         return prediction
+
+
+class FasterRCNNDetector:
+    def __init__(self):
+        self.model = fasterrcnn_mobilenet_v3_large_fpn(
+            weights=FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT
+        )
+        self.model.eval()
+        self.allowed_indices = [8, 3, 6, 4, 77, 7, 33]
+
+    def detect_all_full(self, image):
+        img_tensor = (
+            torch.tensor(image, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        )
+        img_tensor /= 255.0
+        with torch.no_grad():
+            outputs = self.model(img_tensor)
+
+        # Parse the absolutely terrible list(map{tensor}) structure
+        processed = [
+            single_detection
+            for single_detection in zip(
+                outputs[0]["boxes"].detach().cpu().numpy(),
+                outputs[0]["labels"].detach().cpu().numpy(),
+                outputs[0]["scores"].detach().cpu().numpy(),
+            )
+            if single_detection[1] in self.allowed_indices
+            and single_detection[2] > 0.1
+        ]
+
+        return processed

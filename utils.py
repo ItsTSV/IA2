@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from sklearn.metrics import accuracy_score, f1_score
 
 
 def order_points(pts):
@@ -62,20 +63,8 @@ def compute_scores(predicted: list, real_path: str) -> tuple:
     if len(true_values) != len(predicted):
         print("Prediction size mismatch!")
 
-    tp, fp, tn, fn = 0, 0, 0, 0
-    for pred, real in zip(predicted, true_values):
-        if real == 1 and pred == 1:
-            tp += 1
-        elif real == 0 and pred == 1:
-            fp += 1
-        elif real == 0 and pred == 0:
-            tn += 1
-        elif real == 1 and pred == 0:
-            fn += 1
-
-    accuracy = (tp + tn) / (tp + tn + fp + fn)
-    f1 = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) > 0 else 1.0
-
+    accuracy = accuracy_score(true_values, predicted)
+    f1 = f1_score(true_values, predicted, zero_division=1.0)
     return accuracy, f1
 
 
