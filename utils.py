@@ -79,3 +79,27 @@ def draw_bounds(image, coord, color):
     image = cv2.line(image, point3, point4, color, 1, cv2.LINE_AA)
     image = cv2.line(image, point4, point1, color, 1, cv2.LINE_AA)
     return image
+
+
+# python
+def intersects(box_a: tuple, box_b: tuple) -> bool:
+    def to_xyxy(box):
+        vals = list(map(int, box))
+        if len(vals) == 4:
+            x1, y1, x2, y2 = vals
+            return min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
+        if len(vals) == 8:
+            xs = vals[0::2]
+            ys = vals[1::2]
+            return min(xs), min(ys), max(xs), max(ys)
+        raise ValueError("box must have 4 or 8 numeric values")
+
+    ax1, ay1, ax2, ay2 = to_xyxy(box_a)
+    bx1, by1, bx2, by2 = to_xyxy(box_b)
+
+    x_left = max(ax1, bx1)
+    y_top = max(ay1, by1)
+    x_right = min(ax2, bx2)
+    y_bottom = min(ay2, by2)
+
+    return (x_right > x_left) and (y_bottom > y_top)

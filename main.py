@@ -52,12 +52,8 @@ if __name__ == "__main__":
         img = cv2.imread(address)
         copy = img.copy()
 
+        # Detect parking spaces with Faster R-CNN
         detected = faster_detector.detect_all_full(img)
-        for box, index, score in detected:
-            print(f"Index {index} with score {score}")
-            copy = cv2.rectangle(img, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 0, 0), 5)
-            cv2.imshow("Fajne parkoviste", copy)
-            cv2.waitKey()
 
         # Get individual parking spaces
         for coords in pkm_coordinates:
@@ -89,7 +85,11 @@ if __name__ == "__main__":
             #prediction = basic_neural_detector.predict(warped)
             #prediction = cnn_neural_detector.predict(warped)
             #prediction = mobilenet_neural_detector.predict(warped)
-            prediction = efficientnet_neural_detector.predict(warped)
+            if any(intersects(coords, det[0]) for det in detected):
+                prediction = efficientnet_neural_detector.predict(warped, 0.2)
+            else:
+                prediction = efficientnet_neural_detector.predict(warped)
+
             predictions.append(prediction)
 
             # Draw circle

@@ -147,7 +147,7 @@ class MobileNetDetector:
         self.network.load(model_path)
         self.network.eval()
 
-    def predict(self, image):
+    def predict(self, image, confidence_adjustment: float = 0):
         img = cv2.resize(image, (224, 224))
         img_tensor = (
             torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
@@ -155,7 +155,7 @@ class MobileNetDetector:
         img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
+        prediction = 1 if output.item() > 0.5 - confidence_adjustment else 0
         return prediction
 
 
@@ -165,7 +165,7 @@ class EfficientNetDetector:
         self.network.load(model_path)
         self.network.eval()
 
-    def predict(self, image):
+    def predict(self, image, confidence_adjustment: float = 0):
         img = cv2.resize(image, (224, 224))
         img_tensor = (
             torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
@@ -173,7 +173,7 @@ class EfficientNetDetector:
         img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
+        prediction = 1 if output.item() > 0.5 - confidence_adjustment else 0
         return prediction
 
 
