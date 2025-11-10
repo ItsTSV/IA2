@@ -81,7 +81,6 @@ def draw_bounds(image, coord, color):
     return image
 
 
-# python
 def intersects(box_a: tuple, box_b: tuple) -> bool:
     def to_xyxy(box):
         vals = list(map(int, box))

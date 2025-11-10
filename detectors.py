@@ -115,13 +115,13 @@ class BasicNeuralDetector:
         self.network = BasicParkingNet()
         self.network.load(model_path)
 
-    def predict(self, image):
+    def predict(self, image, confidence_adjustment: float = 0):
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (40, 60))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
+        prediction = 1 if output.item() > 0.5 - confidence_adjustment else 0
         return prediction
 
 
@@ -130,14 +130,14 @@ class CnnDetector:
         self.network = CnnParkingNet()
         self.network.load(model_path)
 
-    def predict(self, image):
+    def predict(self, image, confidence_adjustment: float = 0):
         img = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (32, 64))
         img_tensor = torch.tensor(img, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         img_tensor /= 255.0
         with torch.no_grad():
             output = self.network(img_tensor)
-        prediction = 1 if output.item() > 0.5 else 0
+        prediction = 1 if output.item() > 0.5 - confidence_adjustment else 0
         return prediction
 
 
@@ -202,7 +202,7 @@ class FasterRCNNDetector:
                 outputs[0]["scores"].detach().cpu().numpy(),
             )
             if single_detection[1] in self.allowed_indices
-            and single_detection[2] > 0.1
+            and single_detection[2] > 0.7
         ]
 
         return processed

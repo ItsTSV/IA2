@@ -1,6 +1,16 @@
+import numpy as np
 from utils import *
 from detectors import *
 import cv2
+
+
+feature_based = 0
+my_fc = 0
+my_cnn = 0
+mobilenet = 0
+efficientnet = 1
+faster_cnn = 0
+show_faster = 0
 
 
 if __name__ == "__main__":
@@ -15,10 +25,11 @@ if __name__ == "__main__":
 
     # Create window
     cv2.namedWindow("Fajne parkoviste")
-    cv2.namedWindow("Edges")
-    cv2.namedWindow("LBP")
-    cv2.namedWindow("HOG")
-    cv2.namedWindow("HAAR")
+    if feature_based:
+        cv2.namedWindow("Edges")
+        cv2.namedWindow("LBP")
+        cv2.namedWindow("HOG")
+        cv2.namedWindow("HAAR")
 
     # Create detectors
     edge_detector = EdgeDetector()
@@ -32,7 +43,8 @@ if __name__ == "__main__":
     faster_detector = FasterRCNNDetector()
 
     # Visualize most important Haar features
-    haar_features = haar_detector.plot_best_features()
+    if feature_based:
+        haar_features = haar_detector.plot_best_features()
 
     # Prepare all predictions
     all_predictions = []
@@ -43,10 +55,6 @@ if __name__ == "__main__":
     for address in test_images:
         # Vars
         predictions = []
-        predictions_edge = []
-        predictions_lbp = []
-        predictions_hog = []
-        predictions_haar = []
 
         # Open parking img, create copy
         img = cv2.imread(address)
@@ -54,6 +62,9 @@ if __name__ == "__main__":
 
         # Detect parking spaces with Faster R-CNN
         detected = faster_detector.detect_all_full(img)
+        if show_faster:
+            for det in detected:
+                cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
 
         # Get individual parking spaces
         for coords in pkm_coordinates:
@@ -61,35 +72,40 @@ if __name__ == "__main__":
             warped = four_point_transform(img, coords)
             warped = cv2.resize(warped, (100, 150))
 
+            # Round predictions
+            round_predictions = []
+
+            # If Faster is used, adjust confidence based on detections
+            adjustment = 0
+            if faster_cnn:
+                if any(intersects(coords, det[0]) for det in detected):
+                    adjustment = 1
+
             # Get predictions
-            """
-            edge_prediction, edges = edge_detector.predict(warped)
-            lbp_prediction, histogram = lbp_detector.predict(warped)
-            hog_prediction, hog_img = hog_detector.predict(warped)
-            haar_prediction, haar_img = haar_detector.predict(warped)
+            if feature_based:
+                edge_prediction, edges = edge_detector.predict(warped)
+                lbp_prediction, histogram = lbp_detector.predict(warped)
+                hog_prediction, hog_img = hog_detector.predict(warped)
+                haar_prediction, haar_img = haar_detector.predict(warped)
+                round_predictions.extend([edge_prediction, lbp_prediction, hog_prediction, haar_prediction])
 
-            # Calculate final prediction
-            predictions_array = np.array(
-                [edge_prediction, lbp_prediction, hog_prediction, haar_prediction]
-            )
-            prediction = np.argmax(np.bincount(predictions_array))
+            if my_fc:
+                prediction = basic_neural_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
 
-            # Append predictions
-            predictions.append(prediction)
-            predictions_edge.append(edge_prediction)
-            predictions_lbp.append(lbp_prediction)
-            predictions_hog.append(hog_prediction)
-            predictions_haar.append(haar_prediction)
-            """
+            if my_cnn:
+                prediction = cnn_neural_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
 
-            #prediction = basic_neural_detector.predict(warped)
-            #prediction = cnn_neural_detector.predict(warped)
-            #prediction = mobilenet_neural_detector.predict(warped)
-            if any(intersects(coords, det[0]) for det in detected):
-                prediction = efficientnet_neural_detector.predict(warped, 0.2)
-            else:
-                prediction = efficientnet_neural_detector.predict(warped)
+            if mobilenet:
+                prediction = mobilenet_neural_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
 
+            if efficientnet:
+                prediction = efficientnet_neural_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
+
+            prediction = np.argmax(np.bincount(round_predictions))
             predictions.append(prediction)
 
             # Draw circle
@@ -99,43 +115,22 @@ if __name__ == "__main__":
                 draw_bounds(copy, coords, (0, 0, 255))
 
             # Display features
-            """
-            cv2.imshow("Edges", edges)
-            cv2.imshow("LBP", histogram)
-            cv2.imshow("HOG", hog_img)
-            cv2.imshow("HAAR", haar_img)
-            """
+            if feature_based:
+                cv2.imshow("Edges", edges)
+                cv2.imshow("LBP", histogram)
+                cv2.imshow("HOG", hog_img)
+                cv2.imshow("HAAR", haar_img)
+
             cv2.imshow("Fajne parkoviste", copy)
             cv2.waitKey(1)
 
         # Compute scores from all methods
         accuracy, f1 = compute_scores(predictions, address.replace(".jpg", ".txt"))
         all_predictions.append(accuracy)
-        """
-        accuracy_edge, f1_edge = compute_scores(predictions_edge, address.replace(".jpg", ".txt"))
-        accuracy_lbp, f1_lbp = compute_scores(predictions_lbp, address.replace(".jpg", ".txt"))
-        accuracy_hog, f1_hog = compute_scores(predictions_hog, address.replace(".jpg", ".txt"))
-        accuracy_haar, f1_haar = compute_scores(predictions_haar, address.replace(".jpg", ".txt"))
-        """
-        print("---------------------------------")
-        print(f"{address}")
-        print(f"Accuracy: {accuracy}, F1: {f1}")
-        """
-        print(f"Edge Accuracy: {accuracy_edge}, F1: {f1_edge}")
-        print(f"LBP Accuracy: {accuracy_lbp}, F1: {f1_lbp}")
-        print(f"HOG Accuracy: {accuracy_hog}, F1: {f1_hog}")
-        print(f"HAAR Accuracy: {accuracy_haar}, F1: {f1_haar}")
-        """
-        print("---------------------------------")
+        predictions.clear()
 
-        # Charts
-        """
-        sns.barplot(
-            x=["Edge", "LBP", "HOG", "HAAR", "Final"],
-            y=[accuracy_edge, accuracy_lbp, accuracy_hog, accuracy_haar, accuracy],
-        )
-        plt.show()
-        """
+        # Show round stats
+        print(f"-----\n{address}\nAccuracy: {accuracy}\nF1: {f1}\n-----\n")
 
         # Display it
         cv2.imshow("Fajne parkoviste", copy)
