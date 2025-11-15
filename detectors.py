@@ -6,6 +6,7 @@ from skimage.transform import integral_image
 import skimage as ski
 import matplotlib.pyplot as plt
 import glob
+from ultralytics import YOLO
 
 from torchvision.models.detection import (
     fasterrcnn_mobilenet_v3_large_fpn,
@@ -178,7 +179,7 @@ class EfficientNetDetector:
         return prediction
 
 
-class SingleShotDetector:
+class TwoStageDetector:
     def __init__(self, model="faster"):
         self.model = (
             fasterrcnn_mobilenet_v3_large_fpn(
@@ -209,6 +210,27 @@ class SingleShotDetector:
                 outputs[0]["scores"].detach().cpu().numpy(),
             )
             if single_detection[1] in self.allowed_indices and single_detection[2] > 0.7
+        ]
+
+        return processed
+
+
+class YOLODetector:
+    def __init__(self, model_path="models/best_yolo.pt"):
+        self.model = YOLO(model_path)
+        self.model.eval()
+
+    def detect_all_full(self, image):
+        result = self.model([image])[0]
+
+        # Parse much nicer and friendlier format!
+        processed = [
+            single_detection
+            for single_detection in zip(
+                result.boxes.xyxy,
+                result.boxes.conf
+            )
+            if single_detection[1] > 0.5
         ]
 
         return processed

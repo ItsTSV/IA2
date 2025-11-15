@@ -11,10 +11,14 @@ my_cnn = 0
 mobilenet = 0
 efficientnet = 1
 
-# How will single shot detection be used?
-use_single_shot = 0
-show_single_shot = 0
-single_shot_model = "faster"
+# How will two stage detection be used?
+use_two_stage = 0
+show_two_stage = 0
+two_stage_model = "faster"
+
+# YOLO
+use_yolo = 0
+show_yolo = 0
 
 
 if __name__ == "__main__":
@@ -44,7 +48,8 @@ if __name__ == "__main__":
     cnn_neural_detector = CnnDetector()
     mobilenet_neural_detector = MobileNetDetector()
     efficientnet_neural_detector = EfficientNetDetector()
-    single_shot = SingleShotDetector(single_shot_model)
+    two_stage_detector = TwoStageDetector(two_stage_model)
+    yolo_detector = YOLODetector()
 
     # Visualize most important Haar features
     if feature_based:
@@ -65,9 +70,15 @@ if __name__ == "__main__":
         copy = img.copy()
 
         # Detect parking spaces with Faster R-CNN
-        detected = single_shot.detect_all_full(img)
-        if show_single_shot:
-            for det in detected:
+        detected_two_stage = two_stage_detector.detect_all_full(img)
+        if show_two_stage:
+            for det in detected_two_stage:
+                cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
+
+        # Detect parking spaces with YOLO
+        detected_yolo = yolo_detector.detect_all_full(img)
+        if show_yolo:
+            for det in detected_yolo:
                 cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
 
         # Get individual parking spaces
@@ -79,11 +90,15 @@ if __name__ == "__main__":
             # Round predictions
             round_predictions = []
 
-            # If Faster is used, adjust confidence based on detections
+            # If Faster or YOLO is used, adjust confidence based on detections
             adjustment = 0
-            if use_single_shot:
-                if any(intersects(coords, det[0]) for det in detected):
-                    adjustment = 1
+            if use_two_stage:
+                if any(intersects(coords, det[0]) for det in detected_two_stage):
+                    adjustment += 1
+
+            if use_yolo:
+                if any(intersects(coords, det[0]) for det in detected_yolo):
+                    adjustment += 1
 
             # Get predictions
             if feature_based:

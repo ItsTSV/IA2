@@ -1,0 +1,8 @@
+path: C:\Users\Programming\PycharmProjects\IA2\yolo
+train: yolo_train.txt
+val: yolo_val.txt
+
+nc: 1
+names: [
+  "car",
+]
