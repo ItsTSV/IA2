@@ -4,13 +4,17 @@ from detectors import *
 import cv2
 
 
+# What models to use?
 feature_based = 0
 my_fc = 0
 my_cnn = 0
 mobilenet = 0
 efficientnet = 1
-faster_cnn = 0
-show_faster = 0
+
+# How will single shot detection be used?
+use_single_shot = 0
+show_single_shot = 0
+single_shot_model = "faster"
 
 
 if __name__ == "__main__":
@@ -40,7 +44,7 @@ if __name__ == "__main__":
     cnn_neural_detector = CnnDetector()
     mobilenet_neural_detector = MobileNetDetector()
     efficientnet_neural_detector = EfficientNetDetector()
-    faster_detector = FasterRCNNDetector()
+    single_shot = SingleShotDetector(single_shot_model)
 
     # Visualize most important Haar features
     if feature_based:
@@ -61,8 +65,8 @@ if __name__ == "__main__":
         copy = img.copy()
 
         # Detect parking spaces with Faster R-CNN
-        detected = faster_detector.detect_all_full(img)
-        if show_faster:
+        detected = single_shot.detect_all_full(img)
+        if show_single_shot:
             for det in detected:
                 cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
 
@@ -77,7 +81,7 @@ if __name__ == "__main__":
 
             # If Faster is used, adjust confidence based on detections
             adjustment = 0
-            if faster_cnn:
+            if use_single_shot:
                 if any(intersects(coords, det[0]) for det in detected):
                     adjustment = 1
 

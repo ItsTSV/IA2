@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import joblib
-import torchvision.models.detection
 from skimage.feature import local_binary_pattern, hog, haar_like_feature
 from skimage.transform import integral_image
 import skimage as ski
@@ -11,6 +10,8 @@ import glob
 from torchvision.models.detection import (
     fasterrcnn_mobilenet_v3_large_fpn,
     FasterRCNN_MobileNet_V3_Large_FPN_Weights,
+    ssdlite320_mobilenet_v3_large,
+    SSDLite320_MobileNet_V3_Large_Weights,
 )
 
 from models import (
@@ -177,10 +178,16 @@ class EfficientNetDetector:
         return prediction
 
 
-class FasterRCNNDetector:
-    def __init__(self):
-        self.model = fasterrcnn_mobilenet_v3_large_fpn(
-            weights=FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT
+class SingleShotDetector:
+    def __init__(self, model="faster"):
+        self.model = (
+            fasterrcnn_mobilenet_v3_large_fpn(
+                weights=FasterRCNN_MobileNet_V3_Large_FPN_Weights.DEFAULT
+            )
+            if model == "faster"
+            else ssdlite320_mobilenet_v3_large(
+                weights=SSDLite320_MobileNet_V3_Large_Weights
+            )
         )
         self.model.eval()
         self.allowed_indices = [8, 3, 6, 4, 77, 7, 33]
@@ -201,8 +208,7 @@ class FasterRCNNDetector:
                 outputs[0]["labels"].detach().cpu().numpy(),
                 outputs[0]["scores"].detach().cpu().numpy(),
             )
-            if single_detection[1] in self.allowed_indices
-            and single_detection[2] > 0.7
+            if single_detection[1] in self.allowed_indices and single_detection[2] > 0.7
         ]
 
         return processed
