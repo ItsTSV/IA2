@@ -10,6 +10,7 @@ my_fc = 0
 my_cnn = 0
 mobilenet = 0
 efficientnet = 1
+my_vit = 0
 
 # How will two stage detection be used?
 use_two_stage = 0
@@ -50,6 +51,7 @@ if __name__ == "__main__":
     efficientnet_neural_detector = EfficientNetDetector()
     two_stage_detector = TwoStageDetector(two_stage_model)
     yolo_detector = YOLODetector()
+    vit_detector = VitDetector()
 
     # Visualize most important Haar features
     if feature_based:
@@ -70,16 +72,18 @@ if __name__ == "__main__":
         copy = img.copy()
 
         # Detect parking spaces with Faster R-CNN
-        detected_two_stage = two_stage_detector.detect_all_full(img)
-        if show_two_stage:
-            for det in detected_two_stage:
-                cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
+        if use_two_stage:
+            detected_two_stage = two_stage_detector.detect_all_full(img)
+            if show_two_stage:
+                for det in detected_two_stage:
+                    cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
 
         # Detect parking spaces with YOLO
-        detected_yolo = yolo_detector.detect_all_full(img)
-        if show_yolo:
-            for det in detected_yolo:
-                cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
+        if use_yolo:
+            detected_yolo = yolo_detector.detect_all_full(img)
+            if show_yolo:
+                for det in detected_yolo:
+                    cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
 
         # Get individual parking spaces
         for coords in pkm_coordinates:
@@ -122,6 +126,10 @@ if __name__ == "__main__":
 
             if efficientnet:
                 prediction = efficientnet_neural_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
+
+            if my_vit:
+                prediction = vit_detector.predict(warped)
                 round_predictions.append(prediction)
 
             prediction = np.argmax(np.bincount(round_predictions))

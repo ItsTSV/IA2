@@ -20,6 +20,7 @@ from models import (
     CnnParkingNet,
     ParkingMobileNetV3,
     ParkingEfficientNet,
+    MyVisionTransformer
 )
 import torch
 
@@ -234,3 +235,21 @@ class YOLODetector:
         ]
 
         return processed
+
+
+class VitDetector:
+    def __init__(self, model_path="models/parking_vit.pth"):
+        self.model = MyVisionTransformer()
+        self.model.load(model_path)
+        self.model.eval()
+
+    def predict(self, image, confidence_adjustment: float = 0):
+        img = cv2.resize(image, (224, 224))
+        img_tensor = (
+            torch.tensor(img, dtype=torch.float32).unsqueeze(0).permute(0, 3, 1, 2)
+        )
+        img_tensor /= 255.0
+        with torch.no_grad():
+            output = self.model(img_tensor)
+        prediction = 1 if output.item() > 0.5 - confidence_adjustment else 0
+        return prediction
