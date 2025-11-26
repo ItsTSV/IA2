@@ -1,0 +1,9 @@
+[MASTER]
+max-line-length=120
+disable=
+    C0114,  ; Not gonna document in experimental project :D
+    C0115,  ; Not gonna document in experimental project :D
+    C0116,  ; Not gonna document in experimental project :D
+    R0903,  ; few-public-methods
+    E1101,  ; Disable "no-member" errors -- gets really messy with cv2
+    E0611   ; Disable "no-name-in-module" errors -- gets really messy with cv2
