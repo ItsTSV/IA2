@@ -7,3 +7,5 @@ from .big_fully_connected_net import FullyConnectedNetBig
 from .parking_mobilenet_v3 import ParkingMobileNetV3
 from .parking_efficientnet_b0 import ParkingEfficientNet
 from .my_vision_transformer import MyVisionTransformer
+from .dcgan import *
+from .tiny_gan import *
