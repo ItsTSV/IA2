@@ -5,7 +5,9 @@ from detectors import *
 
 # What models to use?
 feature_based = 0
-my_fc = 0
+my_fc_small = 0
+my_fc_medium = 0
+my_fc_big = 0
 big_parking_net = 0
 tiny_parking_net = 0
 mobilenet = 0
@@ -46,7 +48,9 @@ if __name__ == "__main__":
     lbp_detector = LBPDetector()
     hog_detector = HOGDetector()
     haar_detector = HaarDetector()
-    basic_neural_detector = FullyConnectedDetector()
+    fully_connected_detector = FullyConnectedDetector("medium")
+    small_fully_connected_detector = FullyConnectedDetector("small")
+    big_fully_connected_detector = FullyConnectedDetector("big")
     big_parking_detector = NeuralDetector("big_parking_net")
     tiny_parking_detector = NeuralDetector("tiny_parking_net")
     mobilenet_neural_detector = NeuralDetector("mobilenet")
@@ -110,8 +114,16 @@ if __name__ == "__main__":
                 haar_prediction, haar_img = haar_detector.predict(warped)
                 round_predictions.extend([edge_prediction, lbp_prediction, hog_prediction, haar_prediction])
 
-            if my_fc:
-                prediction = basic_neural_detector.predict(warped, adjustment)
+            if my_fc_medium:
+                prediction = fully_connected_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
+
+            if my_fc_small:
+                prediction = small_fully_connected_detector.predict(warped, adjustment)
+                round_predictions.append(prediction)
+
+            if my_fc_big:
+                prediction = big_fully_connected_detector.predict(warped, adjustment)
                 round_predictions.append(prediction)
 
             if big_parking_net:
