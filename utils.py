@@ -81,7 +81,7 @@ def draw_bounds(image, coord, color):
     return image
 
 
-def intersects(box_a: tuple, box_b: tuple) -> bool:
+def intersects(box_a, box_b, size_tolerance=0.5):
     def to_xyxy(box):
         vals = list(map(int, box))
         if len(vals) == 4:
@@ -93,6 +93,7 @@ def intersects(box_a: tuple, box_b: tuple) -> bool:
             return min(xs), min(ys), max(xs), max(ys)
         raise ValueError("box must have 4 or 8 numeric values")
 
+    # Geometry intersect
     ax1, ay1, ax2, ay2 = to_xyxy(box_a)
     bx1, by1, bx2, by2 = to_xyxy(box_b)
 
@@ -101,4 +102,18 @@ def intersects(box_a: tuple, box_b: tuple) -> bool:
     x_right = min(ax2, bx2)
     y_bottom = min(ay2, by2)
 
-    return (x_right > x_left) and (y_bottom > y_top)
+    geom_intersect = (x_right > x_left) and (y_bottom > y_top)
+
+    if not geom_intersect:
+        return False
+
+    # Size intersect
+    area_a = (ax2 - ax1) * (ay2 - ay1)
+    area_b = (bx2 - bx1) * (by2 - by1)
+
+    if area_a == 0 or area_b == 0:
+        return False
+
+    ratio = min(area_a, area_b) / max(area_a, area_b)
+
+    return ratio >= size_tolerance

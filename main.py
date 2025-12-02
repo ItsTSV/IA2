@@ -17,7 +17,7 @@ my_vit = 0
 # How will two stage detection be used?
 use_two_stage = 0
 show_two_stage = 0
-two_stage_thr = 0.2
+two_stage_thr = 0.1
 two_stage_model = "faster"
 two_stage_penalty = 1
 
