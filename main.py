@@ -17,12 +17,14 @@ my_vit = 0
 # How will two stage detection be used?
 use_two_stage = 0
 show_two_stage = 0
+two_stage_thr = 0.2
 two_stage_model = "faster"
 two_stage_penalty = 1
 
 # YOLO
 use_yolo = 0
 show_yolo = 0
+yolo_thr = 0.3
 yolo_penalty = 1
 
 if __name__ == "__main__":
@@ -55,8 +57,8 @@ if __name__ == "__main__":
     tiny_parking_detector = NeuralDetector("tiny_parking_net")
     mobilenet_neural_detector = NeuralDetector("mobilenet")
     efficientnet_neural_detector = NeuralDetector("efficientnet")
-    two_stage_detector = TwoStageDetector(two_stage_model)
-    yolo_detector = YOLODetector()
+    two_stage_detector = TwoStageDetector(two_stage_model, threshold=two_stage_thr)
+    yolo_detector = YOLODetector(threshold=yolo_thr)
     vit_detector = NeuralDetector("vit")
 
     # Prepare all predictions
@@ -79,6 +81,7 @@ if __name__ == "__main__":
             if show_two_stage:
                 for det in detected_two_stage:
                     cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
+                    cv2.putText(copy, str(det[1]), (int(det[0][0]), int(det[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
         # Detect parking spaces with YOLO
         if use_yolo:
@@ -86,6 +89,7 @@ if __name__ == "__main__":
             if show_yolo:
                 for det in detected_yolo:
                     cv2.rectangle(copy, (int(det[0][0]), int(det[0][1])), (int(det[0][2]), int(det[0][3])), (255, 0, 0), 2)
+                    cv2.putText(copy, str(det[1]), (int(det[0][0]), int(det[0][1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
         # Get individual parking spaces
         for coords in pkm_coordinates:
